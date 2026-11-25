@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 // The built files (dist/) are served by the Spring Boot backend, so normal use is one process.
 // `npm run dev` is only for frontend work: it proxies /api to the running backend.
-// If the backend runs on another port, set CLIPPER_BACKEND_URL, e.g. http://localhost:8089.
-const backendUrl = process.env.CLIPPER_BACKEND_URL ?? 'http://localhost:8080';
+// The backend port comes from the same SERVER_PORT environment variable the backend uses (default 8080).
+const backendUrl = `http://localhost:${process.env.SERVER_PORT || '8080'}`;
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -20,7 +20,7 @@ export default defineConfig({
               response.writeHead(502, { 'Content-Type': 'application/json' });
               response.end(JSON.stringify({
                 error: `Cannot reach the Clipper backend at ${backendUrl}. Is it running on that port? `
-                  + 'If you started it on another port, set CLIPPER_BACKEND_URL before npm run dev.',
+                  + 'Both read the SERVER_PORT environment variable; make sure it is set the same for both.',
               }));
             }
           });

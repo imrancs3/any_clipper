@@ -53,10 +53,17 @@ Settings > System > About > Advanced system settings > Environment Variables. Th
    npm run build
    ```
 
-2. Set the access token (any long random string of letters and digits):
+2. Set the access token (any long random string of letters and digits) and, if port 8080 is already used
+   on your PC, the port:
 
-   - Windows (PowerShell): `$env:APP_ACCESS_TOKEN = "your-long-random-token"`
-   - Linux: `export APP_ACCESS_TOKEN=your-long-random-token`
+   - Windows (PowerShell, this window only):
+     `$env:APP_ACCESS_TOKEN = "your-long-random-token"` and `$env:SERVER_PORT = "8089"`
+   - Windows (permanently, then open a new terminal):
+     `setx APP_ACCESS_TOKEN "your-long-random-token"` and `setx SERVER_PORT 8089`
+   - Linux: `export APP_ACCESS_TOKEN=your-long-random-token` and `export SERVER_PORT=8089`
+
+   No file needs editing: `application.yml` and the frontend dev server both read `SERVER_PORT`
+   (default 8080).
 
 3. Build and start the backend, which also serves the frontend (one process):
 
@@ -79,20 +86,15 @@ Settings > System > About > Advanced system settings > Environment Variables. Th
    The first build downloads Maven and the libraries, so it takes a few minutes. If you already have
    Maven installed, `mvn package` works the same way.
 
-4. Open http://localhost:8080 and log in with the token. The console prints the address once Clipper is
-   ready ("Clipper is ready: open http://localhost:...").
-
-**Port 8080 already in use?** Start Clipper on another port by adding `--server.port=8089` to the `java`
-command (or set the `SERVER_PORT` environment variable), then open http://localhost:8089.
+4. Open http://localhost:8080 (or your `SERVER_PORT`, e.g. http://localhost:8089) and log in with the token.
+   The console prints the exact address once Clipper is ready ("Clipper is ready: open http://localhost:...").
 
 The database and all videos live in `backend/data/` (git-ignored). Settings are in
 `backend/src/main/resources/application.yml`; every setting has a comment.
 
 For frontend work only: run the backend as above, then `npm run dev` in `frontend/` and open
-http://localhost:5173. API calls are passed on to http://localhost:8080; if the backend runs on another port,
-set it first (PowerShell: `$env:CLIPPER_BACKEND_URL = "http://localhost:8089"`, Linux:
-`export CLIPPER_BACKEND_URL=http://localhost:8089`). For normal use you don't need `npm run dev` at all:
-open the backend's own address.
+http://localhost:5173. API calls are passed on to the backend at the same `SERVER_PORT` (so set it in that
+terminal too). For normal use you don't need `npm run dev` at all: open the backend's own address.
 
 ## Testing M1
 
@@ -105,7 +107,7 @@ open the backend's own address.
 - Paste a Google Drive link to a video shared as "Anyone with the link": it downloads the same way.
 - Open the same job in two tabs: both update. Start two jobs: the second waits, then runs.
 - Stop Clipper during a download and start it again: that job shows "Interrupted by restart".
-- `curl http://localhost:8080/api/jobs` answers 401; with `-H "X-Access-Token: <token>"` it answers 200.
+- `curl http://localhost:8080/api/jobs` (use your port) answers 401; with `-H "X-Access-Token: <token>"` it answers 200.
 - Start Clipper without yt-dlp on PATH: the log says so, and YouTube links are refused with a clear message.
 - Delete a finished job: it leaves the list and its folder is gone.
 
