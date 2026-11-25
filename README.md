@@ -53,17 +53,17 @@ Settings > System > About > Advanced system settings > Environment Variables. Th
    npm run build
    ```
 
-2. Set the access token (any long random string of letters and digits) and, if port 8080 is already used
-   on your PC, the port:
+2. Create your settings file: copy `.env.example` (in the project root) to `.env` and edit it:
 
-   - Windows (PowerShell, this window only):
-     `$env:APP_ACCESS_TOKEN = "your-long-random-token"` and `$env:SERVER_PORT = "8089"`
-   - Windows (permanently, then open a new terminal):
-     `setx APP_ACCESS_TOKEN "your-long-random-token"` and `setx SERVER_PORT 8089`
-   - Linux: `export APP_ACCESS_TOKEN=your-long-random-token` and `export SERVER_PORT=8089`
+   ```
+   APP_ACCESS_TOKEN=your-long-random-token
+   SERVER_PORT=8089
+   ```
 
-   No file needs editing: `application.yml` and the frontend dev server both read `SERVER_PORT`
-   (default 8080).
+   Windows: `copy .env.example .env`, then `notepad .env`. Linux: `cp .env.example .env`.
+   `SERVER_PORT` is only needed if port 8080 is busy on your PC. Both the backend and `npm run dev` read
+   this one file, so no other file needs editing (the `8080` you see in `application.yml` and
+   `vite.config.ts` is only the fallback). A real environment variable with the same name overrides `.env`.
 
 3. Build and start the backend, which also serves the frontend (one process):
 
@@ -93,8 +93,7 @@ The database and all videos live in `backend/data/` (git-ignored). Settings are 
 `backend/src/main/resources/application.yml`; every setting has a comment.
 
 For frontend work only: run the backend as above, then `npm run dev` in `frontend/` and open
-http://localhost:5173. API calls are passed on to the backend at the same `SERVER_PORT` (so set it in that
-terminal too). For normal use you don't need `npm run dev` at all: open the backend's own address.
+http://localhost:5173. API calls are passed on to the backend at the `SERVER_PORT` from `.env`. For normal use you don't need `npm run dev` at all: open the backend's own address.
 
 ## Testing M1
 

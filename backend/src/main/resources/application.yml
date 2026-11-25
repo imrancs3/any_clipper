@@ -1,14 +1,18 @@
-# Clipper settings. Secrets come ONLY from environment variables (see .env.example); never put keys here.
+# Clipper settings. Secrets come ONLY from the .env file in the project root or from environment
+# variables (see .env.example); never put keys here. A real environment variable wins over .env.
 
 server:
-  # Set the SERVER_PORT environment variable to use another port (e.g. 8089). The Vite dev server
-  # (npm run dev) reads the same variable, so both always agree.
+  # SERVER_PORT from .env (e.g. SERVER_PORT=8089); 8080 is only the fallback when it is not set.
+  # The Vite dev server (npm run dev) reads the same .env file, so both always agree.
   port: ${SERVER_PORT:8080}
   tomcat:
     # Let a client abort a multi-GB upload without Tomcat reading the rest of it first.
     max-swallow-size: 2MB
 
 spring:
+  config:
+    # Reads ../.env (the project root, seen from backend/, where Clipper is started) if it exists.
+    import: optional:file:../.env[.properties]
   threads:
     virtual:
       enabled: true            # every request and every @Async job runs on a cheap virtual thread
