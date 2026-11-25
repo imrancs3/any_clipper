@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * The minimal login of the spec (Section 5): checks the access token once and stores it in a cookie.
  *
  * <p>The browser needs the cookie because its SSE connection (EventSource) cannot send the
- * X-Access-Token header. HttpOnly keeps scripts from reading it; SameSite=Strict keeps other sites
+ * X-Access-Token header. The cookie holds a fingerprint of the token, not the token itself. HttpOnly keeps scripts from reading it; SameSite=Strict keeps other sites
  * from using it.
  */
 @RestController
@@ -35,9 +35,12 @@ public class AuthController {
     @PostMapping("/api/login")
     public ResponseEntity<Void> login(@RequestBody LoginRequest request) {
         if (!accessTokenFilter.isValid(request.token())) {
-            throw new ClipperException(HttpStatus.UNAUTHORIZED, "Wrong access token");
+            throw new ClipperException(HttpStatus.UNAUTHORIZED, "Wrong access token. Clipper uses the "
+                    + "APP_ACCESS_TOKEN it read when it started: restart it after editing .env. An old "
+                    + "APP_ACCESS_TOKEN environment variable (set with setx or $env:) overrides .env, so remove it.");
         }
-        ResponseCookie cookie = ResponseCookie.from(AccessTokenFilter.COOKIE_NAME, request.token())
+        ResponseCookie cookie = ResponseCookie.from(AccessTokenFilter.COOKIE_NAME,
+                        AccessTokenFilter.cookieValueFor(request.token()))
                 .httpOnly(true)
                 .sameSite("Strict")
                 .path("/")
