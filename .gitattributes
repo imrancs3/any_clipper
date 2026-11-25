@@ -1,0 +1,3 @@
+# Keep the Maven wrapper scripts runnable on both systems.
+backend/mvnw text eol=lf
+backend/mvnw.cmd text eol=crlf

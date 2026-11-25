@@ -15,16 +15,33 @@ complete README follows in M8.
 
 ## Prerequisites
 
+You do **not** need to install Maven: the backend includes the Maven wrapper (`mvnw.cmd` on Windows,
+`./mvnw` on Linux), which downloads the right Maven version the first time it runs.
+
 | Tool | Windows | Linux |
 | --- | --- | --- |
-| Java 21 | `winget install EclipseAdoptium.Temurin.21.JDK` | `sudo apt install openjdk-21-jdk` |
-| Maven | `winget install Apache.Maven` | `sudo apt install maven` |
+| Java 21 (JDK) | `winget install EclipseAdoptium.Temurin.21.JDK` | `sudo apt install openjdk-21-jdk` |
 | Node.js 20+ | `winget install OpenJS.NodeJS.LTS` | from nodejs.org or your package manager |
 | FFmpeg (incl. ffprobe) | `winget install Gyan.FFmpeg` | `sudo apt install ffmpeg` |
 | yt-dlp | `winget install yt-dlp.yt-dlp` | `pipx install yt-dlp` |
 
-Open a new terminal after installing so the tools are on PATH. Keep yt-dlp up to date (`yt-dlp -U`),
-because YouTube changes often.
+Chocolatey works too if you prefer it (`choco install temurin21 nodejs-lts ffmpeg yt-dlp`, in an
+Administrator terminal).
+
+**After installing, close the terminal and open a new one** so the new tools are on PATH. Then check:
+
+```
+java -version      (must say 21)
+node -v
+ffmpeg -version
+ffprobe -version
+yt-dlp --version
+```
+
+If `java` is not found or shows another version on Windows, set `JAVA_HOME` to the JDK folder
+(e.g. `C:\Program Files\Eclipse Adoptium\jdk-21...`) and add `%JAVA_HOME%\bin` to PATH under
+Settings > System > About > Advanced system settings > Environment Variables. The Maven wrapper needs
+`java` on PATH or `JAVA_HOME` set. Keep yt-dlp up to date (`yt-dlp -U`), because YouTube changes often.
 
 ## Run
 
@@ -43,11 +60,24 @@ because YouTube changes often.
 
 3. Build and start the backend, which also serves the frontend (one process):
 
+   Windows:
+
    ```
    cd backend
-   mvn package
+   .\mvnw.cmd package
+   java -Xmx384m -XX:+UseSerialGC -jar target\clipper.jar --spring.main.lazy-initialization=true
+   ```
+
+   Linux:
+
+   ```
+   cd backend
+   ./mvnw package
    java -Xmx384m -XX:+UseSerialGC -jar target/clipper.jar --spring.main.lazy-initialization=true
    ```
+
+   The first build downloads Maven and the libraries, so it takes a few minutes. If you already have
+   Maven installed, `mvn package` works the same way.
 
 4. Open http://localhost:8080 and log in with the token.
 
@@ -59,7 +89,7 @@ http://localhost:5173 (API calls are proxied to port 8080).
 
 ## Testing M1
 
-`mvn test` in `backend/` runs the unit tests. Then check by hand:
+`.\mvnw.cmd test` (Windows) or `./mvnw test` (Linux) in `backend/` runs the unit tests. Then check by hand:
 
 - Upload a small video: the job reaches Done and shows the right length.
 - Upload a 3-5 GB file: the upload bar moves, Java's memory in Task Manager stays under about 450 MB,
