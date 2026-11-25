@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,14 +38,17 @@ public class StartupChecks implements ApplicationRunner {
     private final ClipperProperties properties;
     private final ProcessRunner processRunner;
     private final JobRepository jobRepository;
+    private final Environment environment;
 
     /** Set by the tool check; read by request threads when a link job is created. */
     private volatile boolean ytDlpAvailable;
 
-    public StartupChecks(ClipperProperties properties, ProcessRunner processRunner, JobRepository jobRepository) {
+    public StartupChecks(ClipperProperties properties, ProcessRunner processRunner, JobRepository jobRepository,
+                         Environment environment) {
         this.properties = properties;
         this.processRunner = processRunner;
         this.jobRepository = jobRepository;
+        this.environment = environment;
     }
 
     @Override
@@ -74,6 +78,8 @@ public class StartupChecks implements ApplicationRunner {
         }
 
         markInterruptedJobsFailed();
+        log.info("Clipper is ready: open http://localhost:{} in your browser",
+                environment.getProperty("local.server.port", "8080"));
     }
 
     /** False when yt-dlp is missing or turned off; link jobs other than Google Drive are then refused. */

@@ -1,6 +1,7 @@
 # Clipper settings. Secrets come ONLY from environment variables (see .env.example); never put keys here.
 
 server:
+  # Change with --server.port=8089 on the command line, or the SERVER_PORT environment variable.
   port: 8080
   tomcat:
     # Let a client abort a multi-GB upload without Tomcat reading the rest of it first.

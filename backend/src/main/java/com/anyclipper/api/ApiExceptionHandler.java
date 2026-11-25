@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -36,6 +37,23 @@ public class ApiExceptionHandler {
     @ExceptionHandler({HttpMessageNotReadableException.class, MissingServletRequestPartException.class})
     public ResponseEntity<Map<String, String>> handleBadRequest(Exception e) {
         return error(HttpStatus.BAD_REQUEST, "The request is incomplete or not valid JSON");
+    }
+
+    /**
+     * Last resort for anything unexpected: logs the full stack trace to the console and still answers
+     * with a readable message, so the browser never shows a bare "500". Spring's own web exceptions
+     * (404, 405, ...) keep their status.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleUnexpected(Exception e) {
+        if (e instanceof ErrorResponse errorResponse) {
+            HttpStatus status = HttpStatus.valueOf(errorResponse.getStatusCode().value());
+            String detail = errorResponse.getBody().getDetail();
+            return error(status, detail != null ? detail : status.getReasonPhrase());
+        }
+        log.error("Unexpected error while handling a request", e);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected server error: " + e
+                + ". The Clipper console window shows the full details.");
     }
 
     private static ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {

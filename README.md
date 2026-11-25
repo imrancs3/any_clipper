@@ -79,13 +79,20 @@ Settings > System > About > Advanced system settings > Environment Variables. Th
    The first build downloads Maven and the libraries, so it takes a few minutes. If you already have
    Maven installed, `mvn package` works the same way.
 
-4. Open http://localhost:8080 and log in with the token.
+4. Open http://localhost:8080 and log in with the token. The console prints the address once Clipper is
+   ready ("Clipper is ready: open http://localhost:...").
+
+**Port 8080 already in use?** Start Clipper on another port by adding `--server.port=8089` to the `java`
+command (or set the `SERVER_PORT` environment variable), then open http://localhost:8089.
 
 The database and all videos live in `backend/data/` (git-ignored). Settings are in
 `backend/src/main/resources/application.yml`; every setting has a comment.
 
 For frontend work only: run the backend as above, then `npm run dev` in `frontend/` and open
-http://localhost:5173 (API calls are proxied to port 8080).
+http://localhost:5173. API calls are passed on to http://localhost:8080; if the backend runs on another port,
+set it first (PowerShell: `$env:CLIPPER_BACKEND_URL = "http://localhost:8089"`, Linux:
+`export CLIPPER_BACKEND_URL=http://localhost:8089`). For normal use you don't need `npm run dev` at all:
+open the backend's own address.
 
 ## Testing M1
 

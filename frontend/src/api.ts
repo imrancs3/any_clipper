@@ -20,23 +20,47 @@ export function setUnauthorizedHandler(handler: () => void): void {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, { credentials: 'same-origin', ...init });
+  let response: Response;
+  try {
+    response = await fetch(path, { credentials: 'same-origin', ...init });
+  } catch {
+    throw new ApiError(0, 'Cannot reach Clipper. Is the backend still running?');
+  }
   if (!response.ok) {
     throw await toApiError(response.status, () => response.text());
   }
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
 }
 
+/**
+ * Turns an error answer into a readable message. Clipper's own errors are JSON {"error": "..."};
+ * anything else (an empty body, an HTML page) means the request never reached Clipper's API properly.
+ */
 async function toApiError(status: number, readBody: () => Promise<string>): Promise<ApiError> {
   if (status === 401) onUnauthorized();
-  let message = `Request failed (${status})`;
+  let body = '';
   try {
-    const body = JSON.parse(await readBody());
-    if (body?.error) message = body.error;
+    body = await readBody();
   } catch {
-    // Not JSON; keep the generic message.
+    // No body; handled below.
   }
-  return new ApiError(status, message);
+  try {
+    const json = JSON.parse(body);
+    if (typeof json?.error === 'string' && json.error !== '') {
+      // Spring's own fallback error page puts only the status text in "error"; add where to look.
+      const isGenericSpringError = typeof json.status === 'number' && typeof json.path === 'string';
+      return new ApiError(status, isGenericSpringError
+        ? `Server error ${status} (${json.error}) on ${json.path}. The Clipper console window shows the details.`
+        : json.error);
+    }
+  } catch {
+    // Not JSON; handled below.
+  }
+  const snippet = body.trim().slice(0, 200);
+  const hint = status >= 500 && snippet === ''
+    ? ' The server sent no details: is the Clipper backend running, and on the port this page expects?'
+    : '';
+  return new ApiError(status, `Request failed (${status}).${hint}${snippet ? ` Server said: ${snippet}` : ''}`);
 }
 
 export function login(token: string): Promise<void> {
