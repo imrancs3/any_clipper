@@ -92,6 +92,14 @@ Settings > System > About > Advanced system settings > Environment Variables. Th
 The database and all videos live in `backend/data/` (git-ignored). Settings are in
 `backend/src/main/resources/application.yml`; every setting has a comment.
 
+**Login not accepted?** The console shows `Access token loaded from ...` at startup and says where the
+token came from.
+- If it names the APP_ACCESS_TOKEN environment variable, an old value (from `setx` or `$env:`) is
+  overriding `.env`. Remove it with `reg delete HKCU\Environment /v APP_ACCESS_TOKEN /f` (from `setx`) or
+  `Remove-Item Env:APP_ACCESS_TOKEN` (this window only), then open a new terminal and start Clipper again.
+- After editing `.env`, always restart Clipper: it reads the file only at startup.
+- Quotes around the value in `.env` are fine; spaces before or after it are ignored.
+
 For frontend work only: run the backend as above, then `npm run dev` in `frontend/` and open
 http://localhost:5173. API calls are passed on to the backend at the `SERVER_PORT` from `.env`. For normal use you don't need `npm run dev` at all: open the backend's own address.
 

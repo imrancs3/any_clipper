@@ -53,10 +53,7 @@ public class StartupChecks implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws IOException {
-        if (properties.accessToken() == null || properties.accessToken().isBlank()) {
-            throw new IllegalStateException("APP_ACCESS_TOKEN is not set. Set it to a long random password "
-                    + "(see .env.example) and start Clipper again.");
-        }
+        checkAccessToken();
 
         Files.createDirectories(properties.jobsDir());
         Files.createDirectories(properties.uploadTempDir());
@@ -80,6 +77,23 @@ public class StartupChecks implements ApplicationRunner {
         markInterruptedJobsFailed();
         log.info("Clipper is ready: open http://localhost:{} in your browser",
                 environment.getProperty("local.server.port", "8080"));
+    }
+
+    /**
+     * Stops startup without a token, and logs where the token came from (never the token itself),
+     * because an old environment variable silently overriding .env is an easy mistake to make.
+     */
+    private void checkAccessToken() {
+        String token = AccessTokenFilter.normalize(properties.accessToken());
+        Path envFile = Path.of("..", ".env").toAbsolutePath().normalize();
+        if (token.isEmpty()) {
+            throw new IllegalStateException("APP_ACCESS_TOKEN is not set. Put APP_ACCESS_TOKEN=... in "
+                    + envFile + " (copy .env.example), start Clipper from the backend folder, and try again.");
+        }
+        String source = System.getenv("APP_ACCESS_TOKEN") != null
+                ? "the APP_ACCESS_TOKEN environment variable (this overrides .env)"
+                : Files.exists(envFile) ? envFile.toString() : "the configuration";
+        log.info("Access token loaded from {} ({} characters)", source, token.length());
     }
 
     /** False when yt-dlp is missing or turned off; link jobs other than Google Drive are then refused. */
