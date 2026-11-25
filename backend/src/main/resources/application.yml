@@ -1,0 +1,42 @@
+# Clipper settings. Secrets come ONLY from environment variables (see .env.example); never put keys here.
+
+server:
+  port: 8080
+  tomcat:
+    # Let a client abort a multi-GB upload without Tomcat reading the rest of it first.
+    max-swallow-size: 2MB
+
+spring:
+  threads:
+    virtual:
+      enabled: true            # every request and every @Async job runs on a cheap virtual thread
+  datasource:
+    # H2 database file in the data folder (data/clipper-db.mv.db).
+    url: jdbc:h2:file:${clipper.data-dir}/clipper-db;AUTO_SERVER=FALSE
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update         # creates and extends the tables from the entities
+    open-in-view: false
+  mvc:
+    async:
+      request-timeout: -1      # SSE streams manage their own timeout (JobEventService)
+
+clipper:
+  data-dir: ./data             # database, job folders and temporary uploads
+  access-token: ${APP_ACCESS_TOKEN:}   # required; every /api request must carry it
+  max-upload-size: 20GB        # largest file the upload form accepts
+  frontend-dir: ../frontend/dist   # built frontend (npm run build), served by this process
+  tools:
+    ffmpeg: ffmpeg             # name on PATH, or a full path such as C:/ffmpeg/bin/ffmpeg.exe
+    ffprobe: ffprobe
+    yt-dlp: yt-dlp
+    yt-dlp-enabled: true       # false turns off YouTube links (uploads and Google Drive still work)
+  download:
+    max-height: 1080           # highest resolution downloaded from links, in pixels
+    timeout: 2h                # a download running longer than this is stopped
+
+logging:
+  level:
+    org.hibernate.orm.deprecation: error
